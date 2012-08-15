@@ -236,9 +236,7 @@ class qa_chat
 	private function format_message( $msg )
 	{
 		$msg = qa_html( $msg );
-		$search = array( 'cunt', 'fuck', 'shit', 'asshole', 'bitch', 'bastard', 'nigger' );
-		$replace = array( '****', 'f***', 's***', 'sphincter', 'b****', 'b*****d', 'I AM A RACIST' );
-		$msg = str_ireplace( $search, $replace, $msg );
+		// TODO: censor swearing based on admin options
 
 		return qa_html_convert_urls($msg);
 	}
