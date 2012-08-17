@@ -29,9 +29,16 @@ class qa_html_theme_layer extends qa_html_theme_base
 				.qa-chat-item:last-child { border-bottom: 1px solid #eee; }
 				.qa-chat-item-meta { float: left; width: 140px; padding-right: 20px; font-size: 11px; color: #999; text-align: right; }
 				.qa-chat-item-data { float: left; width: 568px; }
-				#qa-chat-user-list { width: 204px; margin-top: 5px; }
+				/*#qa-chat-user-list { width: 204px; margin-top: 5px; }*/
 				.qa-chat-user-item { padding: 2px 4px; }
+				.qa-chat-user-item:hover { background: rgba(255,255,255,0.4); }
 				.qa-chat-idle, .qa-chat-idle > a { color: #aaa; }
+
+				.qa-chat-kick { float: right; cursor: pointer; width: 8px; height: 8px; border-radius: 16px; background: #999; margin-top: 5px; }
+				.qa-chat-kick:hover { background: #f00; }
+
+				.qa-chat-service { background: #fffacd; }
+				/*.qa-chat-service .qa-chat-item-data { color: #a44; }*/
 				</style>';
 
 			$this->output_raw( $chat_css );

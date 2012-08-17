@@ -1,9 +1,30 @@
-/* Timeago 0.9 */
-(function(d){function l(){var a;a=this;a=d(a);if(!a.data("timeago")){a.data("timeago",{datetime:f.datetime(a)});var b=d.trim(a.text());b.length>0&&a.attr("title",b)}a=a.data("timeago");isNaN(a.datetime)||d(this).text(g(a.datetime));return this}function g(a){return f.inWords((new Date).getTime()-a.getTime())}d.timeago=function(a){return a instanceof Date?g(a):typeof a=="string"?g(d.timeago.parse(a)):g(d.timeago.datetime(a))};var f=d.timeago;d.extend(d.timeago,{settings:{refreshMillis:6E4,allowFuture:false,
-strings:{prefixAgo:null,prefixFromNow:null,suffixAgo:"ago",suffixFromNow:"from now",seconds:"less than a minute",minute:"about a minute",minutes:"%d minutes",hour:"about an hour",hours:"about %d hours",day:"a day",days:"%d days",month:"about a month",months:"%d months",year:"about a year",years:"%d years",numbers:[]}},inWords:function(a){function b(j,k){return(d.isFunction(j)?j(k):j).replace(/%d/i,c.numbers&&c.numbers[k]||k)}var c=this.settings.strings,m=c.prefixAgo,n=c.suffixAgo;if(this.settings.allowFuture){if(a<
-0){m=c.prefixFromNow;n=c.suffixFromNow}a=Math.abs(a)}a=a/1E3;var h=a/60,i=h/60,e=i/24,o=e/365;a=a<45&&b(c.seconds,Math.round(a))||a<90&&b(c.minute,1)||h<45&&b(c.minutes,Math.round(h))||h<90&&b(c.hour,1)||i<24&&b(c.hours,Math.round(i))||i<48&&b(c.day,1)||e<30&&b(c.days,Math.floor(e))||e<60&&b(c.month,1)||e<365&&b(c.months,Math.floor(e/30))||o<2&&b(c.year,1)||b(c.years,Math.floor(o));return d.trim([m,a,n].join(" "))},parse:function(a){a=d.trim(a);a=a.replace(/\.\d\d\d/,"");a=a.replace(/-/,"/").replace(/-/,
-"/");a=a.replace(/T/," ").replace(/Z/," UTC");a=a.replace(/([\+-]\d\d)\:?(\d\d)/," $1$2");return new Date(a)},datetime:function(a){a=d(a).get(0).tagName.toLowerCase()=="time"?d(a).attr("datetime"):d(a).attr("title");return f.parse(a)}});d.fn.timeago=function(){var a=this;a.each(l);var b=f.settings;b.refreshMillis>0&&setInterval(function(){a.each(l)},b.refreshMillis);return a};document.createElement("abbr");document.createElement("time")})(jQuery);
+/* Timeago 0.11.4 - timeago.yarp.com */
+(function(d){function i(){var a;a=d(this);if(!a.data("timeago")){a.data("timeago",{datetime:e.datetime(a)});var b=d.trim(a.text());0<b.length&&(!e.isTime(a)||!a.attr("title"))&&a.attr("title",b)}a=a.data("timeago");isNaN(a.datetime)||d(this).text(f(a.datetime));return this}function f(a){return e.inWords((new Date).getTime()-a.getTime())}d.timeago=function(a){return a instanceof Date?f(a):"string"===typeof a?f(d.timeago.parse(a)):"number"===typeof a?f(new Date(a)):f(d.timeago.datetime(a))};var e=d.timeago;
+d.extend(d.timeago,{settings:{refreshMillis:6E4,allowFuture:!1,strings:{prefixAgo:null,prefixFromNow:null,suffixAgo:"ago",suffixFromNow:"from now",seconds:"less than a minute",minute:"about a minute",minutes:"%d minutes",hour:"about an hour",hours:"about %d hours",day:"a day",days:"%d days",month:"about a month",months:"%d months",year:"about a year",years:"%d years",wordSeparator:" ",numbers:[]}},inWords:function(a){function b(b,e){return(d.isFunction(b)?b(e,a):b).replace(/%d/i,c.numbers&&c.numbers[e]||
+e)}var c=this.settings.strings,e=c.prefixAgo,f=c.suffixAgo;this.settings.allowFuture&&0>a&&(e=c.prefixFromNow,f=c.suffixFromNow);var g=Math.abs(a)/1E3,j=g/60,k=j/60,h=k/24,i=h/365,g=45>g&&b(c.seconds,Math.round(g))||90>g&&b(c.minute,1)||45>j&&b(c.minutes,Math.round(j))||90>j&&b(c.hour,1)||24>k&&b(c.hours,Math.round(k))||42>k&&b(c.day,1)||30>h&&b(c.days,Math.round(h))||45>h&&b(c.month,1)||365>h&&b(c.months,Math.round(h/30))||1.5>i&&b(c.year,1)||b(c.years,Math.round(i));return d.trim([e,g,f].join(void 0===
+c.wordSeparator?" ":c.wordSeparator))},parse:function(a){a=d.trim(a);a=a.replace(/\.\d+/,"");a=a.replace(/-/,"/").replace(/-/,"/");a=a.replace(/T/," ").replace(/Z/," UTC");a=a.replace(/([\+\-]\d\d)\:?(\d\d)/," $1$2");return new Date(a)},datetime:function(a){a=e.isTime(a)?d(a).attr("datetime"):d(a).attr("title");return e.parse(a)},isTime:function(a){return"time"===d(a).get(0).tagName.toLowerCase()}});d.fn.timeago=function(){var a=this;a.each(i);var b=e.settings;0<b.refreshMillis&&setInterval(function(){a.each(i)},
+b.refreshMillis);return a};document.createElement("abbr");document.createElement("time")})(jQuery);
 
+/* alternate locales available at http://github.com/rmm5t/jquery-timeago/tree/master/locales */
+jQuery.timeago.settings.strings = {
+  prefixAgo: null,
+  prefixFromNow: null,
+  suffixAgo: "",
+  suffixFromNow: "from now",
+  seconds: "just now",
+  minute: "a minute ago",
+  minutes: "%d minutes ago",
+  hour: "an hour ago",
+  hours: "%d hours ago",
+  day: "a day ago",
+  days: "%d days ago",
+  month: "a month ago",
+  months: "%d months ago",
+  year: "a year ago",
+  years: "%d years ago",
+  wordSeparator: " ",
+  numbers: []
+};
 
 
 var curr_user_idle = false;
@@ -14,10 +35,15 @@ var Tmpl =
 	message: function( post )
 	{
 		var html = '';
-		html += '<li id="qa-chat-id-' + post.postid + '" class="qa-chat-item" style="display:none">';
+		var service_class = post.userid == 0 ? 'qa-chat-service' : '';
+
+		html += '<li id="qa-chat-id-' + post.postid + '" class="qa-chat-item ' + service_class + '" style="display:none">';
 		html += '  <div class="qa-chat-item-meta">';
 		html += '    <span class="qa-chat-item-who">';
-		html += '      <a class="qa-user-link" href="./user/' + encodeURIComponent(post.username) + '">' + post.username + '</a>';
+		if ( post.userid > 0 )
+			html += '      <a class="qa-user-link" href="./user/' + encodeURIComponent(post.username) + '">' + post.username + '</a>';
+		else
+			html += 'KICKBOT';
 		html += '    </span><br>';
 		html += '    <span class="qa-chat-item-when" data-utc="' + post.posted_utc + '" title="' + post.posted_utc + '">' + post.posted + '</span>';
 		html += '  </div>';
@@ -39,11 +65,20 @@ var Tmpl =
 
 		for ( var i in users )
 		{
-			var linkhtml = '<a href="./user/' + encodeURIComponent(users[i].username) + '">' + users[i].username + '</a>';
+			var user_class = '', user_status = '';
+
 			if ( users[i].idle == 1 )
-				html += '<li class="qa-chat-user-item qa-chat-idle">' + linkhtml + ' (idle)</li>';
-			else
-				html += '<li class="qa-chat-user-item">' + linkhtml + '</li>';
+			{
+				user_class = 'qa-chat-idle';
+				user_status = '(idle)';
+			}
+
+			if ( users[i].banned == 0 )
+			{
+				var link_html = ' <a href="./user/' + encodeURIComponent(users[i].username) + '">' + users[i].username + '</a> ';
+				var kick_button = ' <span class="qa-chat-kick"></span> ';
+				html += '<li data-userid="' + users[i].userid + '" class="qa-chat-user-item ' + user_class + '">' + kick_button + link_html + ' ' + user_status + '</li>';
+			}
 
 			if ( users[i].userid == curr_userid )
 				curr_user_idle = (users[i].idle == 1);
@@ -93,8 +128,6 @@ $(function(){
 			type: 'post',
 			data: { ajax_get_messages: lastid },
 			success: function(response) {
-// 				console.log(response);
-
 				var lines = response.split("\n");
 				if ( lines[0] != 'QA_AJAX_RESPONSE' || lines[1] == 0 )
 					return false;
@@ -134,8 +167,6 @@ $(function(){
 			type: 'post',
 			data: { ajax_add_message: message, ajax_add_lastid: '0' },
 			success: function(response) {
-// 				console.log(response);
-
 				$('#qa-chat-form input').removeAttr('disabled');
 				$('#message').val('').focus();
 
@@ -151,6 +182,7 @@ $(function(){
 
 				var post = $.parseJSON( lines[2] );
 				qa_chat_add_message( post );
+				curr_user_idle = false;
 			}
 		});
 
@@ -159,5 +191,28 @@ $(function(){
 
 	// page setup
 	qa_chat_fetch_messages();
+
+	$('.qa-sidepanel').on('click', '.qa-chat-kick', function() {
+		var userid = $(this).parent().attr('data-userid');
+
+		if ( window.confirm('Nominate this user for kicking?') )
+		{
+			$.ajax({
+				type: 'post',
+				data: { ajax_kick_user: userid },
+				success: function(response) {
+					var lines = response.split("\n");
+					if ( lines[0] != 'QA_AJAX_RESPONSE' ) {
+						alert("There was a server error, please try again in a few minutes");
+						return false;
+					}
+					if ( lines[1] == 0 ) {
+						alert("Error: "+lines[2]);
+						return false;
+					}
+				}
+			});
+		}
+	});
 
 });
