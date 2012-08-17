@@ -132,7 +132,6 @@ class qa_chat
 
 		// regular page request
 		$qa_content=qa_content_prepare();
-// 			var_dump( qa_get_logged_in_flags()&QA_USER_FLAGS_EMAIL_CONFIRMED );
 		$qa_content['title']='Chat Room';
 
 		if ( $this->user_perms_post() )
@@ -143,7 +142,7 @@ class qa_chat
 				'	<input type="submit" value="Post">' .
 				'</form>' .
 				'<ul id="qa-chat-list"></ul>' .
-				'<script type="text/javascript" src="'.$this->urltoroot.'qa-chat.js"></script>';
+				'<script type="text/javascript" src="'.$this->urltoroot.'qa-chat.js?=v1.5"></script>';
 		}
 		else if ( $this->user_perms_view() )
 		{
