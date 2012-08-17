@@ -4,13 +4,17 @@
 	License: http://www.gnu.org/licenses/gpl.html
 */
 
+// define( 'QA_CHAT_')
+
 class qa_chat
 {
 	private $directory;
 	private $urltoroot;
 	private $user;
-	private $tbl_posts = 'chat_posts';
-	private $tbl_users = 'chat_users';
+
+	// private $tbl_posts = 'chat_posts';
+	// private $tbl_users = 'chat_users';
+	// private $tbl_kicks = 'chat_kicks';
 	private $optactive = 'chat_active';
 
 	public function load_module($directory, $urltoroot)
@@ -37,8 +41,8 @@ class qa_chat
 
 	function init_queries( $tableslc )
 	{
-		$tbl1 = qa_db_add_table_prefix($this->tbl_posts);
-		$tbl2 = qa_db_add_table_prefix($this->tbl_users);
+		$tbl1 = qa_db_add_table_prefix('chat_posts');
+		$tbl2 = qa_db_add_table_prefix('chat_users');
 
 		if ( in_array($tbl1, $tableslc) && in_array($tbl2, $tableslc) )
 		{
@@ -47,7 +51,7 @@ class qa_chat
 		}
 
 		return array(
-			'CREATE TABLE IF NOT EXISTS ^'.$this->tbl_posts.' (
+			'CREATE TABLE IF NOT EXISTS ^chat_posts (
 			  `postid` int(10) unsigned NOT NULL AUTO_INCREMENT,
 			  `userid` int(10) unsigned NOT NULL,
 			  `posted` datetime NOT NULL,
@@ -56,13 +60,21 @@ class qa_chat
 			  KEY `posted` (`posted`)
 			) ENGINE=InnoDB  DEFAULT CHARSET=utf8',
 
-			'CREATE TABLE IF NOT EXISTS ^'.$this->tbl_users.' (
+			'CREATE TABLE IF NOT EXISTS ^chat_users (
 			  `userid` int(10) unsigned NOT NULL,
 			  `lastposted` datetime NOT NULL,
 			  `lastpolled` datetime NOT NULL,
+			  `banneduntil` datetime DEFAULT NULL,
 			  PRIMARY KEY (`userid`),
 			  KEY `active` (`lastpolled`)
-			) ENGINE=InnoDB DEFAULT CHARSET=utf8'
+			) ENGINE=InnoDB DEFAULT CHARSET=utf8',
+
+			'CREATE TABLE IF NOT EXISTS ^chat_kicks (
+			  `userid` int(10) unsigned NOT NULL,
+			  `kickedby` int(10) unsigned NOT NULL,
+			  `when` datetime NOT NULL,
+			  PRIMARY KEY (`userid`,`kickedby`)
+			) ENGINE=InnoDB DEFAULT CHARSET=utf8',
 		);
 
 	}
@@ -73,8 +85,20 @@ class qa_chat
 		$this->user = array(
 			'id' => qa_get_logged_in_userid(),
 			'handle' => qa_get_logged_in_handle(),
-			'flags' => qa_get_logged_in_flags()
+			'flags' => qa_get_logged_in_flags(),
+			'level' => qa_get_logged_in_level(),
 		);
+
+		// TODO: select from qa_chat_users
+		$sql = 'SELECT (banneduntil-NOW() > 0) AS banned FROM ^chat_users WHERE userid=#';
+		$result = qa_db_query_sub( $sql, $this->user['id'] );
+		$row = qa_db_read_one_assoc($result, true);
+		$this->user['banned'] = @$row['banned'];
+
+		// create dates for database
+		$now = time();
+		$posted = gmdate( 'Y-m-d H:i:s', $now );
+		$posted_utc = gmdate( 'Y-m-d\TH:i:s\Z', $now );
 
 		// AJAX: someone posted a message
 		$message = qa_post_text('ajax_add_message');
@@ -85,10 +109,6 @@ class qa_chat
 				echo "QA_AJAX_RESPONSE\n0\nYou are not allowed to post currently, sorry.";
 				return;
 			}
-
-			$now = time();
-			$posted = gmdate( 'Y-m-d H:i:s', $now );
-			$posted_utc = gmdate( 'Y-m-d\TH:i:s\Z', $now );
 
 			$data = array(
 				'userid' => $this->user['id'],
@@ -105,6 +125,7 @@ class qa_chat
 			$data['username'] = qa_html( $data['username'] );
 			$data['message'] = $this->format_message( $data['message'] );
 
+			header('Content-Type: text/plain; charset=utf-8');
 			echo "QA_AJAX_RESPONSE\n" . $this->user['id'] . "\n" . json_encode($data);
 			return;
 		}
@@ -128,11 +149,36 @@ class qa_chat
 			return;
 		}
 
+		// AJAX: request to kick user
+		$kickuserid = qa_post_text('ajax_kick_user');
+		if ( $kickuserid !== null )
+		{
+			// currently only mods/admins can kick users
+			if ( $this->user['level'] < QA_USER_LEVEL_MODERATOR )
+			{
+				echo "QA_AJAX_RESPONSE\n0\nYou are not allowed to do that currently, sorry.";
+				return;
+			}
+
+			$sql = 'UPDATE ^chat_users SET banneduntil=DATE_ADD(NOW(), INTERVAL 10 MINUTE) WHERE userid=#';
+			qa_db_query_sub( $sql, $kickuserid );
+
+			$message = array(
+				'userid' => '0',
+				'posted' => $posted,
+				'message' => 'User #' . $kickuserid . ' has been kicked for 10 minutes',
+			);
+			$this->post_message( $message );
+
+			header('Content-Type: text/plain; charset=utf-8');
+			echo "QA_AJAX_RESPONSE\n" . $this->user['id'] . "\nGave em a right kickin!";
+			return;
+		}
+
 
 
 		// regular page request
 		$qa_content=qa_content_prepare();
-// 			var_dump( qa_get_logged_in_flags()&QA_USER_FLAGS_EMAIL_CONFIRMED );
 		$qa_content['title']='Chat Room';
 
 		if ( $this->user_perms_post() )
@@ -169,15 +215,17 @@ class qa_chat
 			'WHERE p.postid > # ORDER BY p.posted DESC LIMIT 80';
 		$result = qa_db_query_sub( $sql, $lastid );
 
-		$users = qa_db_read_all_assoc($result);
+		$messages = qa_db_read_all_assoc($result);
 
-		foreach ( $users as &$u )
+		foreach ( $messages as &$m )
 		{
-			$u['message'] = $this->format_message( $u['message'] );
-			$u['username'] = qa_html( $u['username'] );
+			// if ( $m['userid'] == 0 )
+				// $m['username'] = 'HITMONCHAN';
+			$m['message'] = $this->format_message( $m['message'] );
+			$m['username'] = qa_html( $m['username'] );
 		}
 
-		return $users;
+		return $messages;
 	}
 
 	// save message to database
@@ -203,16 +251,19 @@ class qa_chat
 	private function users_online()
 	{
 		$sql =
-			'SELECT u.userid, u.handle AS username, (c.lastposted < DATE_SUB(NOW(), INTERVAL 8 MINUTE)) AS idle ' .
-			'FROM ^users u, ^chat_users c '.
-			'WHERE u.userid=c.userid AND c.lastpolled > DATE_SUB(NOW(), INTERVAL 1 MINUTE) ' .
-			'ORDER BY u.handle';
+			'SELECT u.userid, u.handle AS username, u.level, (c.lastposted < DATE_SUB(NOW(), INTERVAL 8 MINUTE)) AS idle, (c.banneduntil > NOW()) AS banned
+			 FROM ^users u, ^chat_users c
+			 WHERE u.userid=c.userid AND c.lastpolled > DATE_SUB(NOW(), INTERVAL 1 MINUTE)
+			 ORDER BY u.handle';
 		$result = qa_db_query_sub( $sql );
 
 		$users = qa_db_read_all_assoc($result);
 
 		foreach ( $users as &$u )
+		{
 			$u['username'] = qa_html( $u['username'] );
+			$u['mod'] = $u['level'] >= QA_USER_LEVEL_MODERATOR ? '1' : '0';
+		}
 
 		return $users;
 	}
@@ -226,9 +277,9 @@ class qa_chat
 	// check user permissions for posting messages
 	private function user_perms_post()
 	{
-		return qa_user_permit_error() === false && (
-			(qa_get_logged_in_level() >= QA_USER_LEVEL_EXPERT) ||
-			(qa_get_logged_in_flags() & QA_USER_FLAGS_EMAIL_CONFIRMED)
+		return qa_user_permit_error() === false && !$this->user['banned'] && (
+			($this->user['level'] >= QA_USER_LEVEL_EXPERT) ||
+			($this->user['flags'] & QA_USER_FLAGS_EMAIL_CONFIRMED)
 		);
 	}
 

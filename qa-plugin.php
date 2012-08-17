@@ -1,9 +1,9 @@
 <?php
 /*
 	Chat Room plugin for Question2Anaswer
-	Copyright (c) 2010 Scott Vivian
+	Copyright (c) Scott Vivian
 
-	Question2Answer 1.3 (c) 2010, Gideon Greenspan
+	Question2Answer (c) Gideon Greenspan
 	http://www.question2answer.org/
 
 	This program is free software; you can redistribute it and/or
@@ -26,7 +26,7 @@
 	Plugin Version: 1.5
 	Plugin Date: 2012-08-15
 	Plugin Author: Scott Vivian
-	Plugin Author URI: http://pokemondb.net/
+	Plugin Author URI: http://codelair.co.uk
 	Plugin License: GPLv2
 	Plugin Minimum Question2Answer Version: 1.3
 */
