@@ -11,6 +11,7 @@ class qa_chat
 	private $directory;
 	private $urltoroot;
 	private $user;
+	private $dates;
 
 	// private $tbl_posts = 'chat_posts';
 	// private $tbl_users = 'chat_users';
@@ -64,7 +65,7 @@ class qa_chat
 			  `userid` int(10) unsigned NOT NULL,
 			  `lastposted` datetime NOT NULL,
 			  `lastpolled` datetime NOT NULL,
-			  `banneduntil` datetime DEFAULT NULL,
+			  `kickeduntil` datetime NOT NULL DEFAULT "2012-01-01 00:00:00",
 			  PRIMARY KEY (`userid`),
 			  KEY `active` (`lastpolled`)
 			) ENGINE=InnoDB DEFAULT CHARSET=utf8',
@@ -72,13 +73,16 @@ class qa_chat
 			'CREATE TABLE IF NOT EXISTS ^chat_kicks (
 			  `userid` int(10) unsigned NOT NULL,
 			  `kickedby` int(10) unsigned NOT NULL,
-			  `when` datetime NOT NULL,
+			  `whenkicked` datetime NOT NULL,
 			  PRIMARY KEY (`userid`,`kickedby`)
 			) ENGINE=InnoDB DEFAULT CHARSET=utf8',
 		);
 
 	}
 
+	/*
+		MAIN function: display the chat room, or run an AJAX request
+	*/
 	public function process_request( $request )
 	{
 		// set up user
@@ -89,16 +93,19 @@ class qa_chat
 			'level' => qa_get_logged_in_level(),
 		);
 
-		// TODO: select from qa_chat_users
-		$sql = 'SELECT (banneduntil-NOW() > 0) AS banned FROM ^chat_users WHERE userid=#';
+		// check if user is banned (kicked)
+		$sql = 'SELECT kickeduntil, (kickeduntil-NOW() > 0) AS iskicked FROM ^chat_users WHERE userid=#';
 		$result = qa_db_query_sub( $sql, $this->user['id'] );
 		$row = qa_db_read_one_assoc($result, true);
-		$this->user['banned'] = @$row['banned'];
+		$this->user['iskicked'] = @$row['iskicked'];
+		$this->user['kickeduntil'] = @$row['kickeduntil'];
 
 		// create dates for database
 		$now = time();
-		$posted = gmdate( 'Y-m-d H:i:s', $now );
-		$posted_utc = gmdate( 'Y-m-d\TH:i:s\Z', $now );
+		$this->dates = array(
+			'posted' => gmdate( 'Y-m-d H:i:s', $now ),
+			'posted_utc' => gmdate( 'Y-m-d\TH:i:s\Z', $now ),
+		);
 
 		// AJAX: someone posted a message
 		$message = qa_post_text('ajax_add_message');
@@ -113,8 +120,8 @@ class qa_chat
 			$data = array(
 				'userid' => $this->user['id'],
 				'username' => $this->user['handle'],
-				'posted' => $posted,
-				'posted_utc' => $posted_utc,
+				'posted' => $this->dates['posted'],
+				'posted_utc' => $this->dates['posted_utc'],
 				'message' => $message
 			);
 
@@ -139,6 +146,11 @@ class qa_chat
 				echo "QA_AJAX_RESPONSE\n0\nYou don't appear to be logged in. Please reload the page.";
 				return;
 			}
+			if ( $this->user_perms_kicked() )
+			{
+				echo "QA_AJAX_RESPONSE\n0\nYou have been kicked. Please reload the page.";
+				return;
+			}
 
 			$this->update_activity( $lastid==0 );
 			$messages = $this->get_messages( $lastid );
@@ -150,7 +162,8 @@ class qa_chat
 		}
 
 		// AJAX: request to kick user
-		$kickuserid = qa_post_text('ajax_kick_user');
+		$kickuserid = qa_post_text('ajax_kick_userid');
+		$kickhandle = qa_post_text('ajax_kick_username');
 		if ( $kickuserid !== null )
 		{
 			// currently only mods/admins can kick users
@@ -160,26 +173,19 @@ class qa_chat
 				return;
 			}
 
-			$sql = 'UPDATE ^chat_users SET banneduntil=DATE_ADD(NOW(), INTERVAL 10 MINUTE) WHERE userid=#';
-			qa_db_query_sub( $sql, $kickuserid );
-
-			$message = array(
-				'userid' => '0',
-				'posted' => $posted,
-				'message' => 'User #' . $kickuserid . ' has been kicked for 10 minutes',
-			);
-			$this->post_message( $message );
+			$this->kick_user( $kickuserid, $kickhandle );
 
 			header('Content-Type: text/plain; charset=utf-8');
-			echo "QA_AJAX_RESPONSE\n" . $this->user['id'] . "\nGave em a right kickin!";
+			echo "QA_AJAX_RESPONSE\n" . $this->user['id'] . "\nGave 'em a right kickin'!";
 			return;
 		}
 
 
 
 		// regular page request
-		$qa_content=qa_content_prepare();
-		$qa_content['title']='Chat Room';
+		$qa_content = qa_content_prepare();
+		$qa_content['title'] = 'Chat Room';
+		$qa_content['script_rel'][] = $this->urltoroot.'qa-chat.js?=v1.5';
 
 		if ( $this->user_perms_post() )
 		{
@@ -188,17 +194,26 @@ class qa_chat
 				'	<input id="message" class="qa-chat-post" type="text" name="ajax_add_message" autocomplete="off" maxlength="800">' .
 				'	<input type="submit" value="Post">' .
 				'</form>' .
-				'<ul id="qa-chat-list"></ul>' .
-				'<script type="text/javascript" src="'.$this->urltoroot.'qa-chat.js?=v1.5"></script>';
+				'<ul id="qa-chat-list"></ul>';
+		}
+		else if ( $this->user_perms_kicked() )
+		{
+			// $ktil_date = gmdate( 'M j, H:i (UTC)', strtotime($this->user['kickeduntil']) );
+			$ktil_utc = gmdate( 'Y-m-d\TH:i:s\Z', strtotime($this->user['kickeduntil']) );
+			$qa_content['error'] =
+				'Sorry, you have been kicked from chat temporarily. Take a few moments to chill.<br>' .
+				'The ban expires <span id="qa_chat_kickeduntil" data-utc="' . $ktil_utc . '" title="' . $ktil_utc . '">soon</span>' .
+				'<script>$("#qa_chat_kickeduntil").timeago();</script>';
 		}
 		else if ( $this->user_perms_view() )
 		{
-			$qa_content['error'] = qa_insert_login_links( 'Sorry, you are currently unable to post in chat. If you are new, you must confirm your email address.', $request );
+			$qa_content['error'] = 'Sorry, you are currently unable to post in chat. If you are new, you must confirm your email address.';
 		}
 		else
 		{
 			$qa_content['error'] = qa_insert_login_links( 'Please ^1log in^2 or ^3register^4 to use the chat room.', $request );
 		}
+
 
 		return $qa_content;
 	}
@@ -209,18 +224,17 @@ class qa_chat
 	private function get_messages( $lastid )
 	{
 		$sql =
-			'SELECT p.postid, p.userid, u.handle AS username, p.message AS message, ' .
-			'p.posted, DATE_FORMAT(p.posted, "%Y-%m-%dT%H:%i:%sZ") AS posted_utc ' .
-			'FROM ^chat_posts p LEFT JOIN ^users u ON u.userid=p.userid ' .
-			'WHERE p.postid > # ORDER BY p.posted DESC LIMIT 80';
+			'SELECT p.postid, p.userid, u.handle AS username, p.message AS message,
+			   p.posted, DATE_FORMAT(p.posted, "%Y-%m-%dT%H:%i:%sZ") AS posted_utc
+			 FROM ^chat_posts p LEFT JOIN ^users u ON u.userid=p.userid
+			 WHERE p.postid > #
+			 ORDER BY p.posted DESC LIMIT 80';
 		$result = qa_db_query_sub( $sql, $lastid );
 
 		$messages = qa_db_read_all_assoc($result);
 
 		foreach ( $messages as &$m )
 		{
-			// if ( $m['userid'] == 0 )
-				// $m['username'] = 'HITMONCHAN';
 			$m['message'] = $this->format_message( $m['message'] );
 			$m['username'] = qa_html( $m['username'] );
 		}
@@ -251,7 +265,7 @@ class qa_chat
 	private function users_online()
 	{
 		$sql =
-			'SELECT u.userid, u.handle AS username, u.level, (c.lastposted < DATE_SUB(NOW(), INTERVAL 8 MINUTE)) AS idle, (c.banneduntil > NOW()) AS banned
+			'SELECT u.userid, u.handle AS username, u.level, (c.lastposted < DATE_SUB(NOW(), INTERVAL 8 MINUTE)) AS idle, (c.kickeduntil > NOW()) AS kicked
 			 FROM ^users u, ^chat_users c
 			 WHERE u.userid=c.userid AND c.lastpolled > DATE_SUB(NOW(), INTERVAL 1 MINUTE)
 			 ORDER BY u.handle';
@@ -262,10 +276,30 @@ class qa_chat
 		foreach ( $users as &$u )
 		{
 			$u['username'] = qa_html( $u['username'] );
-			$u['mod'] = $u['level'] >= QA_USER_LEVEL_MODERATOR ? '1' : '0';
+			$u['kickable'] = $this->user['level'] >= QA_USER_LEVEL_MODERATOR ? '1' : '0';
 		}
 
 		return $users;
+	}
+
+	// votes to kick a user; mods/admins can kick users straight away
+	private function kick_user( $kickuserid, $kickhandle )
+	{
+		$sql = 'INSERT INTO ^chat_kicks (userid, kickedby, whenkicked) VALUES (#, #, NOW()) ON DUPLICATE KEY UPDATE whenkicked=NOW()';
+		qa_db_query_sub( $sql, $kickuserid, $this->user['id'] );
+
+		$sql = 'UPDATE ^chat_users SET kickeduntil = DATE_ADD(NOW(), INTERVAL 10 MINUTE) WHERE userid=#';
+		$result = qa_db_query_sub( $sql, $kickuserid );
+
+		if ( $result )
+		{
+			$message = array(
+				'userid' => '0',
+				'posted' => $this->dates['posted'],
+				'message' => htmlentities($kickhandle) . ' has been kicked off chat for 10 minutes.',
+			);
+			$this->post_message( $message );
+		}
 	}
 
 	// check user permissions for viewing page
@@ -274,10 +308,16 @@ class qa_chat
 		return $this->user['id'] > 0;
 	}
 
+	// check if user was kicked
+	private function user_perms_kicked()
+	{
+		return $this->user['iskicked'] > 0;
+	}
+
 	// check user permissions for posting messages
 	private function user_perms_post()
 	{
-		return qa_user_permit_error() === false && !$this->user['banned'] && (
+		return qa_user_permit_error() === false && !$this->user['iskicked'] && (
 			($this->user['level'] >= QA_USER_LEVEL_EXPERT) ||
 			($this->user['flags'] & QA_USER_FLAGS_EMAIL_CONFIRMED)
 		);

@@ -6,29 +6,35 @@ c.wordSeparator?" ":c.wordSeparator))},parse:function(a){a=d.trim(a);a=a.replace
 b.refreshMillis);return a};document.createElement("abbr");document.createElement("time")})(jQuery);
 
 /* alternate locales available at http://github.com/rmm5t/jquery-timeago/tree/master/locales */
+jQuery.timeago.settings.allowFuture = true;
 jQuery.timeago.settings.strings = {
   prefixAgo: null,
   prefixFromNow: null,
-  suffixAgo: "",
+  suffixAgo: "ago",
   suffixFromNow: "from now",
-  seconds: "just now",
-  minute: "a minute ago",
-  minutes: "%d minutes ago",
-  hour: "an hour ago",
-  hours: "%d hours ago",
-  day: "a day ago",
-  days: "%d days ago",
-  month: "a month ago",
-  months: "%d months ago",
-  year: "a year ago",
-  years: "%d years ago",
+  seconds: "seconds",
+  minute: "a minute",
+  minutes: "%d minutes",
+  hour: "an hour",
+  hours: "%d hours",
+  day: "a day",
+  days: "%d days",
+  month: "a month",
+  months: "%d months",
+  year: "a year",
+  years: "%d years",
   wordSeparator: " ",
   numbers: []
 };
 
+ 0;
 
-var curr_user_idle = false;
-var curr_userid = 0;
+// current user
+var cUser =
+{
+	id: 0,
+	idle: false
+}
 
 var Tmpl =
 {
@@ -73,15 +79,15 @@ var Tmpl =
 				user_status = '(idle)';
 			}
 
-			if ( users[i].banned == 0 )
+			if ( users[i].kicked == 0 )
 			{
 				var link_html = ' <a href="./user/' + encodeURIComponent(users[i].username) + '">' + users[i].username + '</a> ';
-				var kick_button = ' <span class="qa-chat-kick"></span> ';
+				var kick_button = (users[i].kickable == 1 && users[i].userid != cUser.id) ? ' <span class="qa-chat-kick"></span> ' : '';
 				html += '<li data-userid="' + users[i].userid + '" class="qa-chat-user-item ' + user_class + '">' + kick_button + link_html + ' ' + user_status + '</li>';
 			}
 
-			if ( users[i].userid == curr_userid )
-				curr_user_idle = (users[i].idle == 1);
+			if ( users[i].userid == cUser.id )
+				cUser.idle = (users[i].idle == 1);
 		}
 
 		return html;
@@ -132,7 +138,7 @@ $(function(){
 				if ( lines[0] != 'QA_AJAX_RESPONSE' || lines[1] == 0 )
 					return false;
 
-				curr_userid = lines[1];
+				cUser.id = lines[1];
 
 				var posts = $.parseJSON( lines[2] ).reverse();
 				for ( var i in posts ) {
@@ -149,7 +155,7 @@ $(function(){
 		});
 
 		// if user is inactive, increase timeout
-		if ( curr_user_idle )
+		if ( cUser.idle )
 			setTimeout( function() { qa_chat_fetch_messages(); }, 30000 );
 		else
 			setTimeout( function() { qa_chat_fetch_messages(); }, 8000 );
@@ -182,7 +188,7 @@ $(function(){
 
 				var post = $.parseJSON( lines[2] );
 				qa_chat_add_message( post );
-				curr_user_idle = false;
+				cUser.idle = false;
 			}
 		});
 
@@ -193,13 +199,15 @@ $(function(){
 	qa_chat_fetch_messages();
 
 	$('.qa-sidepanel').on('click', '.qa-chat-kick', function() {
-		var userid = $(this).parent().attr('data-userid');
+		var $li = $(this).parent();
+		var userid = $li.attr('data-userid');
+		var username = $('a', $li).text();
 
 		if ( window.confirm('Nominate this user for kicking?') )
 		{
 			$.ajax({
 				type: 'post',
-				data: { ajax_kick_user: userid },
+				data: { ajax_kick_userid: userid, ajax_kick_username: username },
 				success: function(response) {
 					var lines = response.split("\n");
 					if ( lines[0] != 'QA_AJAX_RESPONSE' ) {
