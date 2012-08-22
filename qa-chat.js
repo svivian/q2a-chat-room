@@ -27,8 +27,6 @@ jQuery.timeago.settings.strings = {
   numbers: []
 };
 
- 0;
-
 // current user
 var cUser =
 {

@@ -276,7 +276,8 @@ class qa_chat
 		foreach ( $users as &$u )
 		{
 			$u['username'] = qa_html( $u['username'] );
-			$u['kickable'] = $this->user['level'] >= QA_USER_LEVEL_MODERATOR ? '1' : '0';
+			$kickable = $u['level'] < QA_USER_LEVEL_MODERATOR && $this->user['level'] >= QA_USER_LEVEL_MODERATOR;
+			$u['kickable'] = $kickable ? '1' : '0';
 		}
 
 		return $users;
