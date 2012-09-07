@@ -327,9 +327,11 @@ class qa_chat
 	// format message
 	private function format_message( $msg )
 	{
-		$msg = qa_html( $msg );
-		// TODO: censor swearing based on admin options
+		// censor bad words
+		$blockwordspreg = qa_get_block_words_preg();
+		$msg = qa_block_words_replace( $msg, $blockwordspreg );
 
+		$msg = qa_html( $msg );
 		return qa_html_convert_urls($msg);
 	}
 
