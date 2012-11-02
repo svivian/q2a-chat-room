@@ -59,7 +59,7 @@ var Tmpl =
 
 	user_list_wrapper: function()
 	{
-		var html = '<div class="qa-sidebar"><h3>Users online</h3><ul id="qa-chat-user-list"></ul></div>';
+		var html = '<div class="qa-sidebar qa-chat-sidebar"><h2>Users online</h2><ul id="qa-chat-user-list"></ul></div>';
 		return html;
 	},
 
