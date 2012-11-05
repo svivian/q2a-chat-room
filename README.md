@@ -14,6 +14,12 @@ Installation & Usage
 
 3. Go to Admin > Pages and add a link to to the chat room in your menu.
 
+4. By default the plugin uses the URL `example.com/chat`. You can change this to something else using Q2A's QA_CONST_PATH_MAP feature. First, change the "URL of link" field from `chat` to your preferred URL, e.g. `chinwag`. Then add this to your `qa-config.php` file:
+
+		$QA_CONST_PATH_MAP=array(
+			'chat' => 'chinwag',
+		);
+
 
 Pay What You Like
 -------------------------------------------------
