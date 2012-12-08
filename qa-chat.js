@@ -27,6 +27,27 @@ jQuery.timeago.settings.strings = {
   numbers: []
 };
 
+// function escapeHtml(unsafe)
+// {
+// 	return unsafe
+// 		.replace(/&/g, "&amp;")
+// 		.replace(/</g, "&lt;")
+// 		.replace(/>/g, "&gt;")
+// 		.replace(/"/g, "&quot;")
+// 		.replace(/'/g, "&#039;");
+// }
+
+// all content is returned from database HTML-encoded so we use this to unencode stuff when needed (e.g. URLs)
+function unescapeHtml(str)
+{
+	return str
+		.replace(/&lt;/g, "<")
+		.replace(/&gt;/g, ">")
+		.replace(/&quot;/g, "\"")
+		.replace(/&#039;/g, "'")
+		.replace(/&amp;/g, "&");
+}
+
 // current user
 var cUser =
 {
@@ -45,7 +66,7 @@ var Tmpl =
 		html += '  <div class="qa-chat-item-meta">';
 		html += '    <span class="qa-chat-item-who">';
 		if ( post.userid > 0 )
-			html += '      <a class="qa-user-link" href="./user/' + encodeURIComponent(post.username) + '">' + post.username + '</a>';
+			html += '      <a class="qa-user-link" href="./user/' + encodeURIComponent( unescapeHtml(post.username) ) + '">' + post.username + '</a>';
 		else
 			html += 'KICKBOT';
 		html += '    </span><br>';
@@ -79,7 +100,7 @@ var Tmpl =
 
 			if ( users[i].kicked == 0 )
 			{
-				var link_html = ' <a href="./user/' + encodeURIComponent(users[i].username) + '">' + users[i].username + '</a> ';
+				var link_html = ' <a href="./user/' + encodeURIComponent( unescapeHtml(users[i].username) ) + '">' + users[i].username + '</a> ';
 				var kick_button = (users[i].kickable == 1 && users[i].userid != cUser.id) ? ' <span class="qa-chat-kick"></span> ' : '';
 				html += '<li data-userid="' + users[i].userid + '" class="qa-chat-user-item ' + user_class + '">' + kick_button + link_html + ' ' + user_status + '</li>';
 			}

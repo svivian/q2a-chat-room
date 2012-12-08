@@ -116,13 +116,19 @@ class qa_chat
 				echo "QA_AJAX_RESPONSE\n0\nYou are not allowed to post currently, sorry.";
 				return;
 			}
+			$message = trim($message);
+			if ( strlen($message) == 0 )
+			{
+				echo "QA_AJAX_RESPONSE\n0\nThe message you post must actually be something.";
+				return;
+			}
 
 			$data = array(
 				'userid' => $this->user['id'],
 				'username' => $this->user['handle'],
 				'posted' => $this->dates['posted'],
 				'posted_utc' => $this->dates['posted_utc'],
-				'message' => $message
+				'message' => $message,
 			);
 
 			// save to database
@@ -185,7 +191,7 @@ class qa_chat
 		// regular page request
 		$qa_content = qa_content_prepare();
 		$qa_content['title'] = 'Chat Room';
-		$qa_content['script_rel'][] = $this->urltoroot.'qa-chat.js?=v1.5';
+		$qa_content['script_rel'][] = $this->urltoroot.'qa-chat.js?=v1.6';
 
 		if ( $this->user_perms_post() )
 		{
