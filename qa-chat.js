@@ -27,16 +27,6 @@ jQuery.timeago.settings.strings = {
   numbers: []
 };
 
-// function escapeHtml(unsafe)
-// {
-// 	return unsafe
-// 		.replace(/&/g, "&amp;")
-// 		.replace(/</g, "&lt;")
-// 		.replace(/>/g, "&gt;")
-// 		.replace(/"/g, "&quot;")
-// 		.replace(/'/g, "&#039;");
-// }
-
 // all content is returned from database HTML-encoded so we use this to unencode stuff when needed (e.g. URLs)
 function unescapeHtml(str)
 {
@@ -78,9 +68,9 @@ var Tmpl =
 		return html;
 	},
 
-	user_list_wrapper: function()
+	user_list_wrapper: function( total )
 	{
-		var html = '<div class="qa-sidebar qa-chat-sidebar"><h2>Users online</h2><ul id="qa-chat-user-list"></ul></div>';
+		var html = '<div class="qa-sidebar qa-chat-sidebar"><h2>Users online <em>(' + total + ')</em></h2><ul id="qa-chat-user-list"></ul></div>';
 		return html;
 	},
 
@@ -139,7 +129,7 @@ $(function(){
 	function qa_chat_update_users( users )
 	{
 		if ( !$user_list ) {
-			$('.qa-sidepanel').prepend( Tmpl.user_list_wrapper() );
+			$('.qa-sidepanel').prepend( Tmpl.user_list_wrapper(users.length) );
 			$user_list = $('#qa-chat-user-list');
 		}
 

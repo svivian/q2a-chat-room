@@ -191,7 +191,7 @@ class qa_chat
 		// regular page request
 		$qa_content = qa_content_prepare();
 		$qa_content['title'] = 'Chat Room';
-		$qa_content['script_rel'][] = $this->urltoroot.'qa-chat.js?=v1.6';
+		$qa_content['script_rel'][] = $this->urltoroot.'qa-chat.js?=v1.7';
 
 		if ( $this->user_perms_post() )
 		{
