@@ -70,7 +70,7 @@ var Tmpl =
 
 	user_list_wrapper: function( total )
 	{
-		var html = '<div class="qa-sidebar qa-chat-sidebar"><h2>Users online <em>(' + total + ')</em></h2><ul id="qa-chat-user-list"></ul></div>';
+		var html = '<div id="qa-chat-sidebar" class="qa-sidebar"><h2>Users online <em>(' + total + ')</em></h2><ul id="qa-chat-user-list"></ul></div>';
 		return html;
 	},
 
@@ -108,7 +108,7 @@ var Tmpl =
 
 $(function(){
 	var lastid = 0;
-	var $user_list = null;
+	var $chat_sidebar = null;
 
 	// add a message to the list
 	function qa_chat_add_message( post )
@@ -128,15 +128,17 @@ $(function(){
 
 	function qa_chat_update_users( users )
 	{
-		if ( !$user_list ) {
-			$('.qa-sidepanel').prepend( Tmpl.user_list_wrapper(users.length) );
-			$user_list = $('#qa-chat-user-list');
+		if ( !$chat_sidebar ) {
+			$('.qa-sidepanel').prepend( '<div id="qa-chat-sidebar"></div>' );
 		}
 
-		$user_list.html( Tmpl.user_list(users) );
+		$chat_sidebar = $('#qa-chat-sidebar');
+		$user_list = $( Tmpl.user_list_wrapper( users.length ) );
+		$user_list.find('#qa-chat-user-list').html( Tmpl.user_list(users) );
+		$chat_sidebar.replaceWith( $user_list )
 	}
 
-// 	// fetch all new messages
+	// fetch all new messages
 	function qa_chat_fetch_messages()
 	{
 		$.ajax({
