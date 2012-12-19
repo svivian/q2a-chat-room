@@ -70,7 +70,7 @@ var Tmpl =
 
 	user_list_wrapper: function( total )
 	{
-		var html = '<div id="qa-chat-sidebar" class="qa-sidebar"><h2>Users online <em>(' + total + ')</em></h2><ul id="qa-chat-user-list"></ul></div>';
+		var html = '<div id="qa-chat-sidebar" class="sidebar"><h2>Users online <em>(' + total + ')</em></h2><ul id="qa-chat-user-list"></ul></div>';
 		return html;
 	},
 

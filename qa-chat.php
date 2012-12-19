@@ -4,18 +4,12 @@
 	License: http://www.gnu.org/licenses/gpl.html
 */
 
-// define( 'QA_CHAT_')
-
 class qa_chat
 {
 	private $directory;
 	private $urltoroot;
 	private $user;
 	private $dates;
-
-	// private $tbl_posts = 'chat_posts';
-	// private $tbl_users = 'chat_users';
-	// private $tbl_kicks = 'chat_kicks';
 	private $optactive = 'chat_active';
 
 	public function load_module($directory, $urltoroot)
@@ -116,6 +110,8 @@ class qa_chat
 				echo "QA_AJAX_RESPONSE\n0\nYou are not allowed to post currently, sorry.";
 				return;
 			}
+
+			// prevent just spaces
 			$message = trim($message);
 			if ( strlen($message) == 0 )
 			{
@@ -191,7 +187,7 @@ class qa_chat
 		// regular page request
 		$qa_content = qa_content_prepare();
 		$qa_content['title'] = 'Chat Room';
-		$qa_content['script_rel'][] = $this->urltoroot.'qa-chat.js?=v1.7';
+		$qa_content['script_rel'][] = $this->urltoroot.'qa-chat.js?v=1.7';
 
 		if ( $this->user_perms_post() )
 		{
@@ -204,7 +200,6 @@ class qa_chat
 		}
 		else if ( $this->user_perms_kicked() )
 		{
-			// $ktil_date = gmdate( 'M j, H:i (UTC)', strtotime($this->user['kickeduntil']) );
 			$ktil_utc = gmdate( 'Y-m-d\TH:i:s\Z', strtotime($this->user['kickeduntil']) );
 			$qa_content['error'] =
 				'Sorry, you have been kicked from chat temporarily. Take a few moments to chill.<br>' .
@@ -303,7 +298,7 @@ class qa_chat
 			$message = array(
 				'userid' => '0',
 				'posted' => $this->dates['posted'],
-				'message' => htmlentities($kickhandle) . ' has been kicked off chat for 10 minutes.',
+				'message' => qa_html($kickhandle) . ' has been kicked off chat for 10 minutes.',
 			);
 			$this->post_message( $message );
 		}
