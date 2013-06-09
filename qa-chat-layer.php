@@ -6,7 +6,7 @@
 
 class qa_html_theme_layer extends qa_html_theme_base
 {
-	private $cssopt = 'chat_room_css';
+	private $optcss = 'chat_hide_css';
 
 	function head_custom()
 	{
@@ -15,7 +15,7 @@ class qa_html_theme_layer extends qa_html_theme_base
 		if ( $this->template != 'plugin' || $this->request != 'chat' )
 			return;
 
-		$hidecss = qa_opt($this->cssopt) === '1';
+		$hidecss = qa_opt($this->optcss) === '1';
 
 		if ( !$hidecss )
 		{

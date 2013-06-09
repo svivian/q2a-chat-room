@@ -10,12 +10,84 @@ class qa_chat
 	private $urltoroot;
 	private $user;
 	private $dates;
+
 	private $optactive = 'chat_active';
+	private $optkick = 'chat_kick_level';
+	private $optcss = 'chat_hide_css';
+
+	// TODO: get the proper language text, this is all a quick fix at the moment
+	private $userlevels = array(
+		'editor' => QA_USER_LEVEL_EDITOR,
+		'mod'    => QA_USER_LEVEL_MODERATOR,
+		'admin'  => QA_USER_LEVEL_ADMIN,
+	);
+	private $userlevels_text = array(
+		'editor' => 'Editor',
+		'mod'    => 'Moderator',
+		'admin'  => 'Administrator',
+	);
 
 	public function load_module($directory, $urltoroot)
 	{
 		$this->directory = $directory;
 		$this->urltoroot = $urltoroot;
+	}
+
+	// set admin options
+	function admin_form( &$qa_content )
+	{
+		$saved_msg = null;
+
+		if ( qa_clicked('chat_save') )
+		{
+			// kick level option
+			$kicklevel = qa_post_text('ch_kicklevel');
+			if ( !in_array( $kicklevel, array_keys($this->userlevels) ) )
+				$kicklevel = 'admin';
+			qa_opt($this->optkick, $this->userlevels[$kicklevel]);
+
+			// css option
+			$hidecss = qa_post_text('ch_hidecss') ? '1' : '0';
+			qa_opt($this->optcss, $hidecss);
+
+			$saved_msg = 'Options saved.';
+		}
+
+		$kl_id = qa_opt($this->optkick);
+		$kl_alias = array_search($kl_id, $this->userlevels);
+		$kl_value = $this->userlevels_text[$kl_alias];
+
+		return array(
+			'ok' => $saved_msg,
+			'style' => 'wide',
+			'note' => array_search(qa_opt($this->optkick), $this->userlevels),
+
+			'fields' => array(
+				'kicklevel' => array(
+					'type' => 'select',
+					'label' => 'Kick level',
+					'tags' => 'NAME="ch_kicklevel"',
+					'options' => $this->userlevels_text,
+					'value' => $kl_value,
+					'note' => 'Which user level is able to kick other users.',
+				),
+				'css' => array(
+					'type' => 'checkbox',
+					'label' => 'Don\'t add CSS inline',
+					'tags' => 'NAME="ch_hidecss"',
+					'value' => qa_opt($this->optcss) === '1',
+					'note' => 'Tick if you added the CSS to your own stylesheet (more efficient).',
+				),
+			),
+
+			'buttons' => array(
+				'save' => array(
+					'tags' => 'NAME="chat_save"',
+					'label' => 'Save options',
+					'value' => '1',
+				),
+			),
+		);
 	}
 
 	public function suggest_requests() // for display in admin interface
@@ -101,6 +173,8 @@ class qa_chat
 			'posted_utc' => gmdate( 'Y-m-d\TH:i:s\Z', $now ),
 		);
 
+		$opt_kicklevel = qa_opt($this->optkick);
+
 		// AJAX: someone posted a message
 		$message = qa_post_text('ajax_add_message');
 		if ( $message !== null )
@@ -168,8 +242,8 @@ class qa_chat
 		$kickhandle = qa_post_text('ajax_kick_username');
 		if ( $kickuserid !== null )
 		{
-			// currently only mods/admins can kick users
-			if ( $this->user['level'] < QA_USER_LEVEL_MODERATOR )
+			// make sure user is correct level as set in options
+			if ( $this->user['level'] < $opt_kicklevel )
 			{
 				echo "QA_AJAX_RESPONSE\n0\nYou are not allowed to do that currently, sorry.";
 				return;
@@ -273,11 +347,12 @@ class qa_chat
 		$result = qa_db_query_sub( $sql );
 
 		$users = qa_db_read_all_assoc($result);
+		$opt_kicklevel = qa_opt($this->optkick);
 
 		foreach ( $users as &$u )
 		{
 			$u['username'] = qa_html( $u['username'] );
-			$kickable = $u['level'] < QA_USER_LEVEL_MODERATOR && $this->user['level'] >= QA_USER_LEVEL_MODERATOR;
+			$kickable = $u['level'] < $opt_kicklevel && $this->user['level'] >= $opt_kicklevel;
 			$u['kickable'] = $kickable ? '1' : '0';
 		}
 
