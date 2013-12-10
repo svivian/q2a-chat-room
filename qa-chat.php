@@ -1,6 +1,6 @@
 <?php
 /*
-	Question2Answer Chat Room plugin, v1.5
+	Question2Answer Chat Room plugin
 	License: http://www.gnu.org/licenses/gpl.html
 */
 
