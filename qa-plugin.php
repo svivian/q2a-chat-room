@@ -3,13 +3,13 @@
 	Plugin Name: Chat Room
 	Plugin URI: https://github.com/svivian/q2a-chat-room
 	Plugin Description: Simple chat room functionality
-	Plugin Version: 1.6
-	Plugin Date: 2012-08-15
+	Plugin Version: 1.7
+	Plugin Date: 2014-12-08
 	Plugin Author: Scott Vivian
 	Plugin Author URI: http://codelair.co.uk
 	Plugin License: GPLv3
-	Plugin Minimum Question2Answer Version: 1.5
-	Plugin Update Check URI: https://raw.github.com/svivian/q2a-chat-room/master/qa-plugin.php
+	Plugin Minimum Question2Answer Version: 1.7
+	Plugin Update Check URI: https://raw.githubusercontent.com/svivian/q2a-chat-room/master/qa-plugin.php
 
 	This program is free software: you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by

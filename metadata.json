@@ -1,0 +1,13 @@
+{
+	"name": "Chat Room",
+	"uri": "https://github.com/svivian/q2a-chat-room",
+	"description": "Simple chat room functionality",
+	"version": "1.7",
+	"date": "2014-12-08",
+	"author": "Scott Vivian",
+	"author_uri": "http://codelair.co.uk",
+	"license": "GPLv3",
+	"update": "https://raw.githubusercontent.com/svivian/q2a-chat-room/master/qa-metadata.json",
+	"min_q2a": "1.7",
+	"min_php": "5.2"
+}
