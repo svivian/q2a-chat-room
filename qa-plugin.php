@@ -8,7 +8,7 @@
 	Plugin Author: Scott Vivian
 	Plugin Author URI: http://codelair.co.uk
 	Plugin License: GPLv3
-	Plugin Minimum Question2Answer Version: 1.7
+	Plugin Minimum Question2Answer Version: 1.5
 	Plugin Update Check URI: https://raw.githubusercontent.com/svivian/q2a-chat-room/master/qa-plugin.php
 
 	This program is free software: you can redistribute it and/or modify

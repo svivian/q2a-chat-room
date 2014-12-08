@@ -40,12 +40,11 @@ class qa_chat
 		switch ($option) {
 			case $this->optactive:
 				return 0;
-				break;
 			case $this->optkick:
 				return QA_USER_LEVEL_ADMIN;
-				break;
 			case $this->optcss:
 				return 0;
+			default:
 				break;
 		}
 	}
