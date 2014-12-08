@@ -4,6 +4,8 @@
 	License: http://www.gnu.org/licenses/gpl.html
 */
 
+require_once QA_INCLUDE_DIR.'app/users.php';
+
 class qa_chat
 {
 	private $directory;
@@ -31,6 +33,21 @@ class qa_chat
 	{
 		$this->directory = $directory;
 		$this->urltoroot = $urltoroot;
+	}
+
+	public function option_default($option)
+	{
+		switch ($option) {
+			case $this->optactive:
+				return 0;
+				break;
+			case $this->optkick:
+				return QA_USER_LEVEL_ADMIN;
+				break;
+			case $this->optcss:
+				return 0;
+				break;
+		}
 	}
 
 	// set admin options
