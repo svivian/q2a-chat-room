@@ -7,7 +7,7 @@
 	"author": "Scott Vivian",
 	"author_uri": "http://codelair.co.uk",
 	"license": "GPLv3",
-	"update": "https://raw.githubusercontent.com/svivian/q2a-chat-room/master/qa-metadata.json",
+	"update_uri": "https://raw.githubusercontent.com/svivian/q2a-chat-room/master/metadata.json",
 	"min_q2a": "1.7",
 	"min_php": "5.2"
 }
