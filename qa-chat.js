@@ -39,26 +39,24 @@ function unescapeHtml(str)
 }
 
 // current user
-var cUser =
-{
+var cUser = {
 	id: 0,
 	idle: false
-}
+};
 
-var Tmpl =
-{
-	message: function( post )
-	{
+var Tmpl = {
+	message: function(post) {
 		var html = '';
 		var service_class = post.userid == 0 ? 'qa-chat-service' : '';
 
 		html += '<li id="qa-chat-id-' + post.postid + '" class="qa-chat-item ' + service_class + '" style="display:none">';
 		html += '  <div class="qa-chat-item-meta">';
 		html += '    <span class="qa-chat-item-who">';
-		if ( post.userid > 0 )
-			html += '      <a class="qa-user-link" href="./user/' + encodeURIComponent( unescapeHtml(post.username) ) + '">' + post.username + '</a>';
-		else
+		if (post.userid > 0) {
+			html += '      <a class="qa-user-link" href="./user/' + encodeURIComponent(unescapeHtml(post.username)) + '">' + post.username + '</a>';
+		} else {
 			html += 'KICKBOT';
+		}
 		html += '    </span><br>';
 		html += '    <span class="qa-chat-item-when" data-utc="' + post.posted_utc + '" title="' + post.posted_utc + '">' + post.posted + '</span>';
 		html += '  </div>';
@@ -68,8 +66,7 @@ var Tmpl =
 		return html;
 	},
 
-	user_list_wrapper: function( total )
-	{
+	user_list_wrapper: function(total) {
 		var html =
 			'<div id="qa-chat-sidebar" class="island">' +
 			'<h3>Users online <span class="qa-chat-user-count">' + total + '</span></h3>' +
@@ -78,29 +75,26 @@ var Tmpl =
 		return html;
 	},
 
-	user_list: function( users )
-	{
+	user_list: function(users) {
 		var html = '';
 
-		for ( var i in users )
-		{
+		for (var i in users) {
 			var user_class = '', user_status = '';
 
-			if ( users[i].idle == 1 )
-			{
+			if (users[i].idle == 1) {
 				user_class = 'qa-chat-idle';
 				user_status = '(idle)';
 			}
 
-			if ( users[i].kicked == 0 )
-			{
-				var link_html = ' <a href="./user/' + encodeURIComponent( unescapeHtml(users[i].username) ) + '">' + users[i].username + '</a> ';
+			if (users[i].kicked == 0) {
+				var link_html = ' <a href="./user/' + encodeURIComponent(unescapeHtml(users[i].username)) + '">' + users[i].username + '</a> ';
 				var kick_button = (users[i].kickable == 1 && users[i].userid != cUser.id) ? ' <span class="qa-chat-kick"></span> ' : '';
 				html += '<li data-userid="' + users[i].userid + '" class="qa-chat-user-item ' + user_class + '">' + kick_button + link_html + ' ' + user_status + '</li>';
 			}
 
-			if ( users[i].userid == cUser.id )
+			if (users[i].userid == cUser.id) {
 				cUser.idle = (users[i].idle == 1);
+			}
 		}
 
 		return html;
@@ -110,36 +104,36 @@ var Tmpl =
 
 /* Q2A chat */
 
-$(function(){
+$(function() {
 	var lastid = 0;
 	var $chat_sidebar = null;
 
 	// add a message to the list
-	function qa_chat_add_message( post )
+	function qa_chat_add_message(post)
 	{
-		var $ex_post = $( '#qa-chat-id-'+post.postid );
-		if ( $ex_post.length == 0 )
-		{
-			var $msg = $( Tmpl.message( post ) );
+		var $ex_post = $('#qa-chat-id-'+post.postid);
+		if ($ex_post.length == 0) {
+			var $msg = $(Tmpl.message(post));
 			$('.qa-chat-item-when', $msg).timeago();
 			$('#qa-chat-list').prepend($msg);
 			$msg.slideDown('fast');
 		}
 
-		if ( $('.qa-chat-item').length > 80 )
+		if ($('.qa-chat-item').length > 80) {
 			$('.qa-chat-item:nth-child(n+81)').remove();
+		}
 	}
 
-	function qa_chat_update_users( users )
+	function qa_chat_update_users(users)
 	{
-		if ( !$chat_sidebar ) {
-			$('.qa-sidepanel').prepend( '<div id="qa-chat-sidebar"></div>' );
+		if (!$chat_sidebar) {
+			$('.qa-sidepanel').prepend('<div id="qa-chat-sidebar"></div>');
 		}
 
 		$chat_sidebar = $('#qa-chat-sidebar');
-		$user_list = $( Tmpl.user_list_wrapper( users.length ) );
-		$user_list.find('#qa-chat-user-list').html( Tmpl.user_list(users) );
-		$chat_sidebar.replaceWith( $user_list )
+		$user_list = $(Tmpl.user_list_wrapper(users.length));
+		$user_list.find('#qa-chat-user-list').html(Tmpl.user_list(users));
+		$chat_sidebar.replaceWith($user_list)
 	}
 
 	// fetch all new messages
@@ -150,36 +144,37 @@ $(function(){
 			data: { ajax_get_messages: lastid },
 			success: function(response) {
 				var lines = response.split("\n");
-				if ( lines[0] != 'QA_AJAX_RESPONSE' || lines[1] == 0 )
+				if (lines[0] != 'QA_AJAX_RESPONSE' || lines[1] == 0) {
 					return false;
+				}
 
 				cUser.id = lines[1];
 
-				var posts = $.parseJSON( lines[2] ).reverse();
-				for ( var i in posts ) {
-					qa_chat_add_message( posts[i] );
+				var posts = $.parseJSON(lines[2]).reverse();
+				for (var i in posts) {
+					qa_chat_add_message(posts[i]);
 					lastid = posts[i].postid;
 				}
 
 				// update active users
-				if ( lines[3] ) {
-					var users = $.parseJSON( lines[3] );
-					qa_chat_update_users( users );
+				if (lines[3]) {
+					var users = $.parseJSON(lines[3]);
+					qa_chat_update_users(users);
 				}
 			}
 		});
 
 		// if user is inactive, increase timeout
-		if ( cUser.idle )
-			setTimeout( function() { qa_chat_fetch_messages(); }, 30000 );
+		if (cUser.idle)
+			setTimeout(function() { qa_chat_fetch_messages(); }, 30000);
 		else
-			setTimeout( function() { qa_chat_fetch_messages(); }, 8000 );
+			setTimeout(function() { qa_chat_fetch_messages(); }, 8000);
 	}
 
 	// adding a message to the chat
-	$('#qa-chat-form').submit( function() {
+	$('#qa-chat-form').submit(function() {
 		var message = $('#message').val();
-		if ( message.length == 0 )
+		if (message.length == 0)
 			return false;
 
 		$('#qa-chat-form input').attr({ disabled: 'disabled' });
@@ -192,17 +187,17 @@ $(function(){
 				$('#message').val('').focus();
 
 				var lines = response.split("\n");
-				if ( lines[0] != 'QA_AJAX_RESPONSE' ) {
+				if (lines[0] != 'QA_AJAX_RESPONSE') {
 					alert("There was a server error, please try again in a few minutes");
 					return false;
 				}
-				if ( lines[1] == 0 ) {
+				if (lines[1] == 0) {
 					alert("Error: "+lines[2]);
 					return false;
 				}
 
-				var post = $.parseJSON( lines[2] );
-				qa_chat_add_message( post );
+				var post = $.parseJSON(lines[2]);
+				qa_chat_add_message(post);
 				cUser.idle = false;
 			}
 		});
@@ -218,18 +213,17 @@ $(function(){
 		var userid = $li.attr('data-userid');
 		var username = $('a', $li).text();
 
-		if ( window.confirm('Nominate this user for kicking?') )
-		{
+		if (window.confirm('Nominate this user for kicking?')) {
 			$.ajax({
 				type: 'post',
 				data: { ajax_kick_userid: userid, ajax_kick_username: username },
 				success: function(response) {
 					var lines = response.split("\n");
-					if ( lines[0] != 'QA_AJAX_RESPONSE' ) {
+					if (lines[0] != 'QA_AJAX_RESPONSE') {
 						alert("There was a server error, please try again in a few minutes");
 						return false;
 					}
-					if ( lines[1] == 0 ) {
+					if (lines[1] == 0) {
 						alert("Error: "+lines[2]);
 						return false;
 					}
