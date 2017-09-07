@@ -404,7 +404,7 @@ class qa_chat
 	private function format_message($msg)
 	{
 		// censor bad words
-		require_once QA_INCLUDE_DIR.'qa-util-string.php';
+		require_once QA_INCLUDE_DIR.'util/string.php';
 		$blockwordspreg = qa_get_block_words_preg();
 
 		$msg = qa_block_words_replace($msg, $blockwordspreg);
